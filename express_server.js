@@ -16,17 +16,19 @@ const urlDatabase = {
   "OAQJtK": "https://www.kingdomhearts.com"
 };
 
+// Show text on root path
 app.get("/", (req, res) => {
   res.send("This is a site for making small URLs.");
 });
 
+// Show index page /urls/
 app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase };
   res.render("urls_index", templateVars);
 });
 
+// Add a short URL to database
 app.post("/urls", (req, res) => {
-  // console.log(JSON.stringify(req.body));  // Log the POST request body to the console
   const id = generateRandomString(); // get random identifier
   // Add https:// if url does not have it.
   let longURL = req.body.longURL;
@@ -42,6 +44,7 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
 
+// Show information about a single short URL
 app.get("/urls/:shortURL", (req, res) => {
   const templateVars = {
     shortURL: req.params.shortURL, 
@@ -56,23 +59,22 @@ app.get("/urls/:shortURL", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
+// Delete a short URL
 app.post("/urls/:shortURL/delete", (req, res) => {
   delete urlDatabase[req.params.shortURL];
   res.redirect(`/urls`);
 });
 
+// Quick link to go to URL target
 app.get("/u/:shortURL", (req, res) => {
   const longURL = urlDatabase[req.params.shortURL];
   res.redirect(longURL);
 });
 
+// Show all URLs in database
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
-
-// app.get("/hello", (req, res) => {
-//   res.send("<html><body>Hello <b>World</b></body></html>\n");
-// });
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
