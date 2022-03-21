@@ -28,13 +28,10 @@ app.get("/urls", (req, res) => {
 app.post("/urls", (req, res) => {
   // console.log(JSON.stringify(req.body));  // Log the POST request body to the console
   const id = generateRandomString(); // get random identifier
-  // Add http://www. if url does not have it.
+  // Add https:// if url does not have it.
   let longURL = req.body.longURL;
-  if (longURL.slice(0,4) !== "www.") {
-    longURL = `www.${longURL}`;
-  }
   if (longURL.slice(0,4) !== "http") {
-    longURL = `http://${longURL}`;
+    longURL = `https://${longURL}`;
   }
 
   urlDatabase[id] = longURL;
@@ -57,6 +54,11 @@ app.get("/urls/:shortURL", (req, res) => {
     templateVars.valid = false;
   }
   res.render("urls_show", templateVars);
+});
+
+app.post("/urls/:shortURL/delete", (req, res) => {
+  delete urlDatabase[req.params.shortURL];
+  res.redirect(`/urls`);
 });
 
 app.get("/u/:shortURL", (req, res) => {
