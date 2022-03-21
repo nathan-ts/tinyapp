@@ -14,7 +14,7 @@ const urlDatabase = {
 };
 
 app.get("/", (req, res) => {
-  res.send("Hello!");
+  res.send("This is a site for making small URLs.");
 });
 
 app.get("/urls", (req, res) => {

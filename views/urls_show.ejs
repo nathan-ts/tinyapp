@@ -5,7 +5,9 @@
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
   <title>URL - TinyApp Example</title>
 </head>
-
+<header>
+  <%- include('partials/_header'); %>
+</header>
 <body>
   <div class="card text-center">
       <div class="card-header"></div>
@@ -13,9 +15,9 @@
         <h5 class="card-title">TinyURL for: <a href="<%= longURL %>"><%= longURL %></a></h5>
         <p class="card-text">Short URL: <a href="/urls/<%= shortURL %>"><%= shortURL %></a></p>
       </div>
-      <div class="card-body">
+      <!-- <div class="card-body">
         <p class="card-text"><a href="#"">Create</a> a new TinyURL</p>
-      </div>
+      </div> -->
     <div class="card-footer text-muted"></div>
   </div>
   <!-- Bootstrap JS -->
