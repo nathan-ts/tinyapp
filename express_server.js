@@ -23,17 +23,22 @@ app.get("/", (req, res) => {
 app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase };
   res.render("urls_index", templateVars);
-
-  // console.log(req.body);
-  // // console.log(JSON.stringify(req.body));  // Log the POST request body to the console
-  // res.statusCode = 200;
-  // res.send("Ok");         // Respond with 'Ok' (we will replace this)
 });
 
 app.post("/urls", (req, res) => {
-  console.log(JSON.stringify(req.body));  // Log the POST request body to the console
-  res.statusCode = 200;
-  res.send("Ok");         // Respond with 'Ok' (we will replace this)
+  // console.log(JSON.stringify(req.body));  // Log the POST request body to the console
+  const id = generateRandomString(); // get random identifier
+  // Add http://www. if url does not have it.
+  let longURL = req.body.longURL;
+  if (longURL.slice(0,4) !== "www.") {
+    longURL = `www.${longURL}`;
+  }
+  if (longURL.slice(0,4) !== "http") {
+    longURL = `http://${longURL}`;
+  }
+
+  urlDatabase[id] = longURL;
+  res.redirect(`/urls/${id}`);
 });
 
 app.get("/urls/new", (req, res) => {
@@ -44,14 +49,24 @@ app.get("/urls/:shortURL", (req, res) => {
   const templateVars = {
     shortURL: req.params.shortURL, 
     longURL: urlDatabase[req.params.shortURL],
+    valid: true,
   };
+  if (templateVars.shortURL in urlDatabase === false) {
+    templateVars.shortURL = "N/A";
+    templateVars.longURL = "Invalid TinyURL entered"
+    templateVars.valid = false;
+  }
   res.render("urls_show", templateVars);
+});
+
+app.get("/u/:shortURL", (req, res) => {
+  const longURL = urlDatabase[req.params.shortURL];
+  res.redirect(longURL);
 });
 
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
-
 
 // app.get("/hello", (req, res) => {
 //   res.send("<html><body>Hello <b>World</b></body></html>\n");
