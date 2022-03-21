@@ -2,6 +2,9 @@ const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
 
+const bodyParser = require("body-parser");
+app.use(bodyParser.urlencoded({extended: true}));
+
 app.set("view engine", "ejs")
 
 const urlDatabase = {
@@ -20,6 +23,21 @@ app.get("/", (req, res) => {
 app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase };
   res.render("urls_index", templateVars);
+
+  // console.log(req.body);
+  // // console.log(JSON.stringify(req.body));  // Log the POST request body to the console
+  // res.statusCode = 200;
+  // res.send("Ok");         // Respond with 'Ok' (we will replace this)
+});
+
+app.post("/urls", (req, res) => {
+  console.log(JSON.stringify(req.body));  // Log the POST request body to the console
+  res.statusCode = 200;
+  res.send("Ok");         // Respond with 'Ok' (we will replace this)
+});
+
+app.get("/urls/new", (req, res) => {
+  res.render("urls_new");
 });
 
 app.get("/urls/:shortURL", (req, res) => {
@@ -34,10 +52,15 @@ app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
-});
+
+// app.get("/hello", (req, res) => {
+//   res.send("<html><body>Hello <b>World</b></body></html>\n");
+// });
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
+
+function generateRandomString() {
+  return Buffer.from(Math.random().toString()).toString("base64").substr(10, 6);
+}
