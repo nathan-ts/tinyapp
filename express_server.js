@@ -29,17 +29,22 @@ app.get("/urls", (req, res) => {
 
 // Add a short URL to database
 app.post("/urls", (req, res) => {
-  const id = generateRandomString(); // get random identifier
-  // Add https:// if url does not have it.
+  // Get unique random identifier
+  let id = generateRandomString(); 
+  while (id in urlDatabase) {
+    id = generateRandomString();
+  }
+  // Prepend https:// if url does not have it.
   let longURL = req.body.longURL;
   if (longURL.slice(0,4) !== "http") {
     longURL = `https://${longURL}`;
   }
-
+  // Add new short URL to database and redirect to urls_show
   urlDatabase[id] = longURL;
   res.redirect(`/urls/${id}`);
 });
 
+// Make a new short URL form
 app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
@@ -50,6 +55,7 @@ app.get("/urls/:shortURL", (req, res) => {
     shortURL: req.params.shortURL, 
     longURL: urlDatabase[req.params.shortURL],
     valid: true,
+    id: req.params.shortURL
   };
   if (templateVars.shortURL in urlDatabase === false) {
     templateVars.shortURL = "N/A";
@@ -57,6 +63,17 @@ app.get("/urls/:shortURL", (req, res) => {
     templateVars.valid = false;
   }
   res.render("urls_show", templateVars);
+});
+
+// Update an existing short URL with a new long URL
+app.post("/urls/:id", (req, res) => {
+  // Prepend https:// if url does not have it.
+  let longURL = req.body.id;
+  if (longURL.slice(0,4) !== "http") {
+    longURL = `https://${longURL}`;
+  }
+  urlDatabase[req.params.id] = longURL;
+  res.redirect(`/urls`);
 });
 
 // Delete a short URL
