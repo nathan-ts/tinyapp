@@ -5,7 +5,7 @@ const PORT = 8080; // default port 8080
 const cookieParser = require('cookie-parser')
 
 const bodyParser = require("body-parser");
-app.use(bodyParser.urlencoded({extended: true}));
+app.use(bodyParser.urlencoded({extended: true}), cookieParser());
 
 app.set("view engine", "ejs")
 
@@ -25,7 +25,10 @@ app.get("/", (req, res) => {
 
 // Show index page /urls/
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase };
+  const templateVars = { 
+    urls: urlDatabase, 
+    username: req.cookies["username"],
+  };
   res.render("urls_index", templateVars);
 });
 
@@ -48,7 +51,10 @@ app.post("/urls", (req, res) => {
 
 // Make a new short URL form
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  const templateVars = { 
+    username: req.cookies["username"],
+  };
+  res.render("urls_new", templateVars);
 });
 
 // Show information about a single short URL
@@ -57,7 +63,8 @@ app.get("/urls/:shortURL", (req, res) => {
     shortURL: req.params.shortURL, 
     longURL: urlDatabase[req.params.shortURL],
     valid: true,
-    id: req.params.shortURL
+    id: req.params.shortURL,
+    username: req.cookies["username"],
   };
   if (templateVars.shortURL in urlDatabase === false) {
     templateVars.shortURL = "N/A";
@@ -75,19 +82,24 @@ app.post("/urls/:id", (req, res) => {
     longURL = `https://${longURL}`;
   }
   urlDatabase[req.params.id] = longURL;
-  res.redirect(`/urls`);
+  res.redirect('/urls');
 });
 
 // Delete a short URL
 app.post("/urls/:shortURL/delete", (req, res) => {
   delete urlDatabase[req.params.shortURL];
-  res.redirect(`/urls`);
+  res.redirect('/urls');
 });
 
 // Quick link to go to URL target
 app.get("/u/:shortURL", (req, res) => {
   const longURL = urlDatabase[req.params.shortURL];
   res.redirect(longURL);
+});
+
+app.post("/login", (req, res) => {
+  res.cookie("username",req.body.username);
+  res.redirect('/urls');
 });
 
 // Show all URLs in database
