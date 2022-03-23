@@ -12,11 +12,24 @@ app.set("view engine", "ejs")
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com",
+  "SuplrX": "https://www.playlostark.com",
   "q64A7G": "https://na.finalfantasy.com",
   "loHenP": "http://iro.ragnarokonline.com",
-  "SuplrX": "https://www.playlostark.com",
-  "OAQJtK": "https://www.kingdomhearts.com"
+  "OAQJtK": "https://www.kingdomhearts.com",
 };
+
+const users = { 
+  "userRandomID": {
+    id: "userRandomID", 
+    email: "user@example.com", 
+    password: "purple-monkey-dinosaur"
+  },
+ "user2RandomID": {
+    id: "user2RandomID", 
+    email: "user2@example.com", 
+    password: "dishwasher-funk"
+  }
+}
 
 // Show text on root path
 app.get("/", (req, res) => {
@@ -104,6 +117,25 @@ app.post("/login", (req, res) => {
 
 app.post("/logout", (req, res) => {
   res.clearCookie("username");
+  res.redirect('/urls');
+});
+
+app.get("/register", (req, res) => {
+  const templateVars = {
+    username: req.cookies["username"],
+  };
+  res.render("urls_register", templateVars);
+});
+
+app.post("/register", (req, res) => {
+  const newID = generateRandomString();
+  users[newID] = {
+    id: newID,
+    email: req.body.email, 
+    password: req.body.password,
+  };
+  res.cookie("username", newID);
+  // console.log(users);
   res.redirect('/urls');
 });
 
