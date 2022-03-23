@@ -1,3 +1,8 @@
+// LOG IN DOES NOT WORK, it's setting cookie as a separate id than the id registered
+
+
+
+
 const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
@@ -40,7 +45,7 @@ app.get("/", (req, res) => {
 app.get("/urls", (req, res) => {
   const templateVars = { 
     urls: urlDatabase, 
-    users,
+    user: users[req.cookies["user-id"]],
   };
   res.render("urls_index", templateVars);
 });
@@ -53,10 +58,9 @@ app.post("/urls", (req, res) => {
     id = generateRandomString();
   }
   // Prepend https:// if url does not have it.
-  let longURL = req.body.longURL;
-  if (longURL.slice(0,4) !== "http") {
-    longURL = `https://${longURL}`;
-  }
+  let longURL = checkScheme(req.body.longURL);
+  
+
   // Add new short URL to database and redirect to urls_show
   urlDatabase[id] = longURL;
   res.redirect(`/urls/${id}`);
@@ -65,7 +69,7 @@ app.post("/urls", (req, res) => {
 // Make a new short URL form
 app.get("/urls/new", (req, res) => {
   const templateVars = { 
-    users,
+    user: users[req.cookies["user-id"]],
   };
   res.render("urls_new", templateVars);
 });
@@ -77,7 +81,7 @@ app.get("/urls/:shortURL", (req, res) => {
     longURL: urlDatabase[req.params.shortURL],
     valid: true,
     id: req.params.shortURL,
-    users,
+    user: users[req.cookies["user-id"]],
   };
   if (templateVars.shortURL in urlDatabase === false) {
     templateVars.shortURL = "N/A";
@@ -90,10 +94,7 @@ app.get("/urls/:shortURL", (req, res) => {
 // Update an existing short URL with a new long URL
 app.post("/urls/:id", (req, res) => {
   // Prepend https:// if url does not have it.
-  let longURL = req.body.id;
-  if (longURL.slice(0,4) !== "http") {
-    longURL = `https://${longURL}`;
-  }
+  let longURL = checkScheme(req.body.id);
   urlDatabase[req.params.id] = longURL;
   res.redirect('/urls');
 });
@@ -110,23 +111,32 @@ app.get("/u/:shortURL", (req, res) => {
   res.redirect(longURL);
 });
 
+// Log in, search for userID of email, and set cookie
 app.post("/login", (req, res) => {
-  res.cookie("username",req.body.username);
+  const email = req.body.email;
+  const toLogIn = "";
+  for (let user in users) {
+    if (user.email === email) toLogIn = user;
+  }
+  res.cookie("user_id",toLogIn);
   res.redirect('/urls');
 });
 
+// Log out and clear cookie
 app.post("/logout", (req, res) => {
   res.clearCookie("username");
   res.redirect('/urls');
 });
 
+// Returns registration page
 app.get("/register", (req, res) => {
   const templateVars = {
-    users,
+    user: users[req.cookies["user-id"]],
   };
   res.render("urls_register", templateVars);
 });
 
+// Register a user in the users object
 app.post("/register", (req, res) => {
   const newID = generateRandomString();
   users[newID] = {
@@ -134,7 +144,9 @@ app.post("/register", (req, res) => {
     email: req.body.email, 
     password: req.body.password,
   };
-  res.cookie("username", newID);
+  res.cookie("user_id", newID);
+  console.log("Cookies", req.cookies);
+  console.log("Users", users);
   res.redirect('/urls');
 });
 
@@ -149,4 +161,11 @@ app.listen(PORT, () => {
 
 function generateRandomString() {
   return Buffer.from(Math.random().toString()).toString("base64").substr(10, 6);
+}
+
+function checkScheme(url) {
+  if (url.slice(0,4) !== "http") {
+    url = `https://${url}`;
+  }
+  return url;
 }
