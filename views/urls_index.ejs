@@ -13,6 +13,7 @@
 </header>
 <body>
   <main style="margin: 1em;">
+    <% if(Object.keys(urls).length) { %>
     <h3>My URLs</h3>
     <table class="table">
       <thead>
@@ -34,6 +35,10 @@
         <% } %>
       </tbody>
     </table>
+    <% } %>
+    <% if (!Object.keys(urls).length) { %>
+      <p>Please log in to view your URLS.</p>
+    <% } %>
   </main>
   <!-- Bootstrap JS -->
   <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>

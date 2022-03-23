@@ -98,7 +98,10 @@ app.get("/urls/:shortURL", (req, res) => {
     shortURL: req.params.shortURL, 
     user: users[req.cookies["user_id"]],
   };
-  if (templateVars.shortURL in urlDatabase === false) {
+  if (urlDatabase[req.params.shortURL].userID !== req.cookies["user_id"]) {
+    return res.status(403).send("403: Cannot access a URL that does not belong to your account\n")
+  }
+  if (templateVars.shortURL in urlDatabase === false) { //if short URL not in db
     templateVars.shortURL = "N/A";
     templateVars.longURL = "Invalid TinyURL entered"
     templateVars.valid = false;
