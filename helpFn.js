@@ -14,8 +14,8 @@ const checkScheme = function(url) {
 // Returns an object with error string (nullable) and data object of user (nullable), given an email and password
 const authUser = function(em, pw, userdb) {
   let userID = findEmailID(em, userdb);
-  if (!userID) return {error: "Email not found", data: null };
-  if (userdb[userID].password !== pw) return { error: "Passwords do not match", data: null };
+  if (!userID) return {error: "Email not found.", data: null };
+  if (userdb[userID].password !== pw) return { error: "Incorrect password entered.", data: null };
   return { error: null, data: userdb[userID] };
 }
 

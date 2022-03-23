@@ -108,10 +108,11 @@ app.get("/u/:shortURL", (req, res) => {
   res.redirect(longURL);
 });
 
+let loginError = ""; // Global scope login error message
 app.get("/login", (req, res) => {
   const templateVars = {
     user: users[req.cookies["user_id"]],
-    error: "",
+    error: loginError,
   };
   res.render("urls_login", templateVars);
 });
@@ -121,10 +122,12 @@ app.post("/login", (req, res) => {
   const { email, password } = req.body;
   const { error, data } = authUser(email, password, users);
   if (error) {
-    console.log("Authentication error:",error);
-    return res.redirect("/urls");
+    console.log("Authentication error: ", error);
+    loginError = error;
+    return res.status(403).redirect("/login");
   }
 
+  loginError = "";
   res.cookie("user_id", data.id);
   console.log(data, " logged in");
   return res.redirect('/urls');
