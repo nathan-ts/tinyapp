@@ -55,6 +55,13 @@ app.get("/urls", (req, res) => {
 
 // Add a short URL to database
 app.post("/urls", (req, res) => {
+  // Check if user is logged in
+  const templateVars = { 
+    user: users[req.cookies["user_id"]],
+  };
+  if (!templateVars.user) { // Redirect to /login if not logged in
+    return res.status(403).redirect("/login");
+  }
   // Get unique random identifier
   let id = generateRandomString(); 
   while (id in urlDatabase) {
@@ -70,6 +77,9 @@ app.get("/urls/new", (req, res) => {
   const templateVars = { 
     user: users[req.cookies["user_id"]],
   };
+  if (!templateVars.user) { // Redirect to /login if not logged in
+    return res.status(403).redirect("/login");
+  }
   res.render("urls_new", templateVars);
 });
 
@@ -108,13 +118,17 @@ app.get("/u/:shortURL", (req, res) => {
   res.redirect(longURL);
 });
 
+// Login page
 let loginError = ""; // Global scope login error message
 app.get("/login", (req, res) => {
   const templateVars = {
     user: users[req.cookies["user_id"]],
     error: loginError,
   };
-  res.render("urls_login", templateVars);
+  if (templateVars.user) { // Redirect to /urls if already logged in
+    return res.redirect("/urls");
+  }
+  return res.render("urls_login", templateVars);
 });
 
 // Log in, search for userID of email, and set cookie
@@ -139,13 +153,16 @@ app.post("/logout", (req, res) => {
   return res.redirect('/urls');
 });
 
+// Registration page
 let registerError = ""; // Global scope registration error message
-// Returns registration page
 app.get("/register", (req, res) => {
   const templateVars = {
     user: users[req.cookies["user_id"]],
     error: registerError,
   };
+  if (templateVars.user) { // Redirect to /urls if already logged in
+    return res.redirect("/urls");
+  }
   return res.render("urls_register", templateVars);  
 });
 
