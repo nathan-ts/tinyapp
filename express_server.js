@@ -1,7 +1,4 @@
-// LOG IN DOES NOT WORK, it's setting cookie as a separate id than the id registered
-
-
-
+const { generateRandomString, checkScheme, authUser, findEmailID, validEmail } = require('./helpFn');
 
 const express = require("express");
 const app = express();
@@ -14,6 +11,8 @@ app.use(bodyParser.urlencoded({extended: true}), cookieParser());
 
 app.set("view engine", "ejs")
 
+
+// Default URL database of short and long URLs
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com",
@@ -23,6 +22,7 @@ const urlDatabase = {
   "OAQJtK": "https://www.kingdomhearts.com",
 };
 
+// Default user database
 const users = { 
   "userRandomID": {
     id: "userRandomID", 
@@ -38,15 +38,18 @@ const users = {
 
 // Show text on root path
 app.get("/", (req, res) => {
-  res.send("This is a site for making small URLs.");
+  res.send("This is a site for making small URLs. Please visit /urls to get started.");
 });
 
 // Show index page /urls/
 app.get("/urls", (req, res) => {
   const templateVars = { 
     urls: urlDatabase, 
-    user: users[req.cookies["user-id"]],
+    user: users[req.cookies["user_id"]],
   };
+  // console.log(req.cookies["user_id"]);
+  // console.log(users);
+  // console.log("Rendering urls_index with user", templateVars.user);
   res.render("urls_index", templateVars);
 });
 
@@ -57,19 +60,15 @@ app.post("/urls", (req, res) => {
   while (id in urlDatabase) {
     id = generateRandomString();
   }
-  // Prepend https:// if url does not have it.
-  let longURL = checkScheme(req.body.longURL);
-  
-
   // Add new short URL to database and redirect to urls_show
-  urlDatabase[id] = longURL;
+  urlDatabase[id] = checkScheme(req.body.longURL);; // Prepend https:// if url does not have it.
   res.redirect(`/urls/${id}`);
 });
 
 // Make a new short URL form
 app.get("/urls/new", (req, res) => {
   const templateVars = { 
-    user: users[req.cookies["user-id"]],
+    user: users[req.cookies["user_id"]],
   };
   res.render("urls_new", templateVars);
 });
@@ -81,7 +80,7 @@ app.get("/urls/:shortURL", (req, res) => {
     longURL: urlDatabase[req.params.shortURL],
     valid: true,
     id: req.params.shortURL,
-    user: users[req.cookies["user-id"]],
+    user: users[req.cookies["user_id"]],
   };
   if (templateVars.shortURL in urlDatabase === false) {
     templateVars.shortURL = "N/A";
@@ -93,9 +92,7 @@ app.get("/urls/:shortURL", (req, res) => {
 
 // Update an existing short URL with a new long URL
 app.post("/urls/:id", (req, res) => {
-  // Prepend https:// if url does not have it.
-  let longURL = checkScheme(req.body.id);
-  urlDatabase[req.params.id] = longURL;
+  urlDatabase[req.params.id] = checkScheme(req.body.id); // Prepend https:// if url does not have it.
   res.redirect('/urls');
 });
 
@@ -111,33 +108,59 @@ app.get("/u/:shortURL", (req, res) => {
   res.redirect(longURL);
 });
 
+app.get("/login", (req, res) => {
+  const templateVars = {
+    user: users[req.cookies["user_id"]],
+    error: "",
+  };
+  res.render("urls_login", templateVars);
+});
+
 // Log in, search for userID of email, and set cookie
 app.post("/login", (req, res) => {
-  const email = req.body.email;
-  const toLogIn = "";
-  for (let user in users) {
-    if (user.email === email) toLogIn = user;
+  const { email, password } = req.body;
+  const { error, data } = authUser(email, password, users);
+  if (error) {
+    console.log("Authentication error:",error);
+    return res.redirect("/urls");
   }
-  res.cookie("user_id",toLogIn);
-  res.redirect('/urls');
+
+  res.cookie("user_id", data.id);
+  console.log(data, " logged in");
+  return res.redirect('/urls');
 });
 
 // Log out and clear cookie
 app.post("/logout", (req, res) => {
-  res.clearCookie("username");
-  res.redirect('/urls');
+  res.clearCookie("user_id");
+  return res.redirect('/urls');
 });
 
+let registerError = ""; // Global scope registration error message
 // Returns registration page
 app.get("/register", (req, res) => {
   const templateVars = {
-    user: users[req.cookies["user-id"]],
+    user: users[req.cookies["user_id"]],
+    error: registerError,
   };
-  res.render("urls_register", templateVars);
+  return res.render("urls_register", templateVars);  
 });
 
 // Register a user in the users object
 app.post("/register", (req, res) => {
+  // Check if email is valid
+  if (!validEmail(req.body.email)) {
+    console.log("Invalid email entered; registration cancelled");
+    registerError = "400: Invalid email entered";
+    return res.status(400).redirect('/register');
+  }
+  if (findEmailID(req.body.email, users)) {
+    console.log("Duplicate email entered; registration cancelled");
+    registerError = "400: The email you have entered already exists in our database.";
+    return res.status(400).redirect('/register');
+  }
+  registerError = ""; 
+
   const newID = generateRandomString();
   users[newID] = {
     id: newID,
@@ -145,9 +168,11 @@ app.post("/register", (req, res) => {
     password: req.body.password,
   };
   res.cookie("user_id", newID);
-  console.log("Cookies", req.cookies);
-  console.log("Users", users);
-  res.redirect('/urls');
+  // console.log("body email validity is ", validEmail(req.body.email));
+  // console.log("bad test validity is", validEmail("badtest"));
+  console.log("Registration complete");
+  console.log("Current user database:", users);
+  return res.redirect('/urls');
 });
 
 // Show all URLs in database
@@ -155,17 +180,8 @@ app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
+// Start up server
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
 
-function generateRandomString() {
-  return Buffer.from(Math.random().toString()).toString("base64").substr(10, 6);
-}
-
-function checkScheme(url) {
-  if (url.slice(0,4) !== "http") {
-    url = `https://${url}`;
-  }
-  return url;
-}
