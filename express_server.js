@@ -43,8 +43,14 @@ app.get("/", (req, res) => {
 
 // Show index page /urls/
 app.get("/urls", (req, res) => {
+  let filteredDB = {};
+  for (let url in urlDatabase) {
+    if (urlDatabase[url].userID === req.cookies["user_id"]) {
+      filteredDB[url] = urlDatabase[url];
+    }
+  }
   const templateVars = { 
-    urls: urlDatabase, 
+    urls: filteredDB, 
     user: users[req.cookies["user_id"]],
   };
   // console.log(req.cookies["user_id"]);
@@ -105,12 +111,18 @@ app.get("/urls/:shortURL", (req, res) => {
 
 // Update an existing short URL with a new long URL
 app.post("/urls/:id", (req, res) => {
+  if (urlDatabase[req.params.id].userID !== req.cookies["user_id"]) {
+    return res.status(403).send("403: Cannot edit a URL that does not belong to your account\n")
+  }
   urlDatabase[req.params.id].longURL = checkScheme(req.body.id); // Prepend https:// if url does not have it.
-  res.redirect('/urls');
+  return res.redirect('/urls');
 });
 
 // Delete a short URL
 app.post("/urls/:shortURL/delete", (req, res) => {
+  if (urlDatabase[req.params.shortURL].userID !== req.cookies["user_id"]) {
+    return res.status(403).send("403: Cannot delete a URL that does not belong to your account\n")
+  }
   delete urlDatabase[req.params.shortURL];
   res.redirect('/urls');
 });
