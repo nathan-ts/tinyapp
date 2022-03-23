@@ -14,12 +14,12 @@ app.set("view engine", "ejs")
 
 // Default URL database of short and long URLs
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com",
-  "SuplrX": "https://www.playlostark.com",
-  "q64A7G": "https://na.finalfantasy.com",
-  "loHenP": "http://iro.ragnarokonline.com",
-  "OAQJtK": "https://www.kingdomhearts.com",
+  "b2xVn2": { longURL: "http://www.lighthouselabs.ca", userID: "userRandomID" },
+  "9sm5xK": { longURL: "http://www.google.com", userID: "user2RandomID" },
+  "SuplrX": { longURL: "https://www.playlostark.com", userID: "userRandomID" },
+  "q64A7G": { longURL: "https://na.finalfantasy.com", userID: "user2RandomID" },
+  "loHenP": { longURL: "http://iro.ragnarokonline.com", userID: "userRandomID" },
+  "OAQJtK": { longURL: "https://www.kingdomhearts.com", userID: "user2RandomID" },
 };
 
 // Default user database
@@ -68,7 +68,10 @@ app.post("/urls", (req, res) => {
     id = generateRandomString();
   }
   // Add new short URL to database and redirect to urls_show
-  urlDatabase[id] = checkScheme(req.body.longURL);; // Prepend https:// if url does not have it.
+  urlDatabase[id] = { 
+    longURL: checkScheme(req.body.longURL), // Prepend https:// if url does not have it.
+    userID: req.cookies["user_id"], 
+  }; 
   res.redirect(`/urls/${id}`);
 });
 
@@ -87,22 +90,22 @@ app.get("/urls/new", (req, res) => {
 app.get("/urls/:shortURL", (req, res) => {
   const templateVars = {
     shortURL: req.params.shortURL, 
-    longURL: urlDatabase[req.params.shortURL],
-    valid: true,
-    id: req.params.shortURL,
     user: users[req.cookies["user_id"]],
   };
   if (templateVars.shortURL in urlDatabase === false) {
     templateVars.shortURL = "N/A";
     templateVars.longURL = "Invalid TinyURL entered"
     templateVars.valid = false;
+  } else { // shortURL exists in URL database
+    templateVars.longURL = urlDatabase[req.params.shortURL].longURL;
+    templateVars.valid = true;
   }
   res.render("urls_show", templateVars);
 });
 
 // Update an existing short URL with a new long URL
 app.post("/urls/:id", (req, res) => {
-  urlDatabase[req.params.id] = checkScheme(req.body.id); // Prepend https:// if url does not have it.
+  urlDatabase[req.params.id].longURL = checkScheme(req.body.id); // Prepend https:// if url does not have it.
   res.redirect('/urls');
 });
 
@@ -114,7 +117,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 
 // Quick link to go to URL target
 app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL];
+  const longURL = urlDatabase[req.params.shortURL].longURL;
   res.redirect(longURL);
 });
 
