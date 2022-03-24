@@ -1,3 +1,14 @@
+/*
+TO DO: 
+
+add edit button on /urls
+fix undefined error when entering /urls/invalidID
+confirm POST /urls returns HTML error if not logged in
+POST /urls/:id - check all conditions
+
+*/
+
+
 const { generateRandomString, checkScheme, authUser, findEmailID, validEmail } = require('./helpFn');
 
 // bcrypt setup for password hashing
@@ -54,7 +65,7 @@ const users = {
 
 // Show text on root path
 app.get("/", (req, res) => {
-  res.send("This is a site for making small URLs. Please visit /urls to get started.");
+  return res.redirect('/urls');
 });
 
 // Show index page /urls/
