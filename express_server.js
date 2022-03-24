@@ -1,15 +1,27 @@
 const { generateRandomString, checkScheme, authUser, findEmailID, validEmail } = require('./helpFn');
 
+// bcrypt setup for password hashing
 const bcrypt = require('bcryptjs');
 
+// Express setup
 const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
 
+// Unencrypted cookie parser
 const cookieParser = require('cookie-parser')
-
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}), cookieParser());
+
+// Encrypted cookie parser
+const cookieSession = require('cookie-session')
+app.use(cookieSession({
+  name: 'session',
+  keys: ['key1', 'key2'], 
+  secret: "correct horse battery staple",
+  // Cookie Options
+  maxAge: 24 * 60 * 60 * 1000 // 24 hours
+}))
 
 app.set("view engine", "ejs")
 
@@ -50,13 +62,13 @@ app.get("/urls", (req, res) => {
   // Filter urls for logged in user only
   let filteredDB = {};
   for (let url in urlDatabase) {
-    if (urlDatabase[url].userID === req.cookies["user_id"]) {
+    if (urlDatabase[url].userID === req.session.user_id) {
       filteredDB[url] = urlDatabase[url];
     }
   }
   const templateVars = { 
     urls: filteredDB, 
-    user: users[req.cookies["user_id"]],
+    user: users[req.session.user_id],
   };
   console.log("All users: ", users);
   res.render("urls_index", templateVars);
@@ -66,7 +78,7 @@ app.get("/urls", (req, res) => {
 app.post("/urls", (req, res) => {
   // Check if user is logged in
   const templateVars = { 
-    user: users[req.cookies["user_id"]],
+    user: users[req.session.user_id],
   };
   if (!templateVars.user) { // Redirect to /login if not logged in
     return res.status(403).redirect("/login");
@@ -79,7 +91,7 @@ app.post("/urls", (req, res) => {
   // Add new short URL to database and redirect to urls_show
   urlDatabase[id] = { 
     longURL: checkScheme(req.body.longURL), // Prepend https:// if url does not have it.
-    userID: req.cookies["user_id"], 
+    userID: req.session.user_id, 
   }; 
   res.redirect(`/urls/${id}`);
 });
@@ -87,7 +99,7 @@ app.post("/urls", (req, res) => {
 // Make a new short URL form
 app.get("/urls/new", (req, res) => {
   const templateVars = { 
-    user: users[req.cookies["user_id"]],
+    user: users[req.session.user_id],
   };
   if (!templateVars.user) { // Redirect to /login if not logged in
     return res.status(403).redirect("/login");
@@ -99,9 +111,9 @@ app.get("/urls/new", (req, res) => {
 app.get("/urls/:shortURL", (req, res) => {
   const templateVars = {
     shortURL: req.params.shortURL, 
-    user: users[req.cookies["user_id"]],
+    user: users[req.session.user_id],
   };
-  if (urlDatabase[req.params.shortURL].userID !== req.cookies["user_id"]) {
+  if (urlDatabase[req.params.shortURL].userID !== req.session.user_id) {
     return res.status(403).send("403: Cannot access a URL that does not belong to your account\n")
   }
   if (templateVars.shortURL in urlDatabase === false) { //if short URL not in db
@@ -117,7 +129,7 @@ app.get("/urls/:shortURL", (req, res) => {
 
 // Update an existing short URL with a new long URL
 app.post("/urls/:id", (req, res) => {
-  if (urlDatabase[req.params.id].userID !== req.cookies["user_id"]) {
+  if (urlDatabase[req.params.id].userID !== req.session.user_id) {
     return res.status(403).send("403: Cannot edit a URL that does not belong to your account\n")
   }
   urlDatabase[req.params.id].longURL = checkScheme(req.body.id); // Prepend https:// if url does not have it.
@@ -126,7 +138,7 @@ app.post("/urls/:id", (req, res) => {
 
 // Delete a short URL
 app.post("/urls/:shortURL/delete", (req, res) => {
-  if (urlDatabase[req.params.shortURL].userID !== req.cookies["user_id"]) {
+  if (urlDatabase[req.params.shortURL].userID !== req.session.user_id) {
     return res.status(403).send("403: Cannot delete a URL that does not belong to your account\n")
   }
   delete urlDatabase[req.params.shortURL];
@@ -143,7 +155,7 @@ app.get("/u/:shortURL", (req, res) => {
 let loginError = ""; // Global scope login error message
 app.get("/login", (req, res) => {
   const templateVars = {
-    user: users[req.cookies["user_id"]],
+    user: users[req.session.user_id],
     error: loginError,
   };
   if (templateVars.user) { // Redirect to /urls if already logged in
@@ -163,14 +175,14 @@ app.post("/login", (req, res) => {
   }
 
   loginError = "";
-  res.cookie("user_id", data.id);
+  req.session.user_id = data.id;
   console.log(data, " logged in");
   return res.redirect('/urls');
 });
 
 // Log out and clear cookie
 app.post("/logout", (req, res) => {
-  res.clearCookie("user_id");
+  req.session = null;
   return res.redirect('/urls');
 });
 
@@ -178,7 +190,7 @@ app.post("/logout", (req, res) => {
 let registerError = ""; // Global scope registration error message
 app.get("/register", (req, res) => {
   const templateVars = {
-    user: users[req.cookies["user_id"]],
+    user: users[req.session.user_id],
     error: registerError,
   };
   if (templateVars.user) { // Redirect to /urls if already logged in
@@ -208,7 +220,7 @@ app.post("/register", (req, res) => {
     email: req.body.email, 
     password: bcrypt.hashSync(req.body.password, 10),
   };
-  res.cookie("user_id", newID);
+  req.session.user_id = newID;
   console.log("Registration complete");
   console.log("Current user database:", users);
   return res.redirect('/urls');
