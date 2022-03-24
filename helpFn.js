@@ -1,3 +1,5 @@
+const bcrypt = require('bcryptjs');
+
 // Returns a random 6 character string with upper, lower and numeric
 const generateRandomString = function() {
   return Buffer.from(Math.random().toString()).toString("base64").substr(10, 6);
@@ -15,7 +17,9 @@ const checkScheme = function(url) {
 const authUser = function(em, pw, userdb) {
   let userID = findEmailID(em, userdb);
   if (!userID) return {error: "Email not found.", data: null };
-  if (userdb[userID].password !== pw) return { error: "Incorrect password entered.", data: null };
+  if (!bcrypt.compareSync(pw, userdb[userID].password)) {
+    return { error: "Incorrect password entered.", data: null };
+  }
   return { error: null, data: userdb[userID] };
 }
 

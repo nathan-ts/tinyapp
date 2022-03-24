@@ -36,8 +36,10 @@
       </tbody>
     </table>
     <% } %>
-    <% if (!Object.keys(urls).length) { %>
+    <% if (!Object.keys(urls).length && !user) { %>
       <p>Please log in to view your URLS.</p>
+    <% } else { %>
+      <p>No URLs found.</p>
     <% } %>
   </main>
   <!-- Bootstrap JS -->

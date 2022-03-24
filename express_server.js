@@ -1,5 +1,7 @@
 const { generateRandomString, checkScheme, authUser, findEmailID, validEmail } = require('./helpFn');
 
+const bcrypt = require('bcryptjs');
+
 const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
@@ -23,16 +25,18 @@ const urlDatabase = {
 };
 
 // Default user database
+const pw1 = "purple-monkey-dinosaur";
+const pw2 = "dishwasher-funk";
 const users = { 
   "userRandomID": {
     id: "userRandomID", 
     email: "user@example.com", 
-    password: "purple-monkey-dinosaur"
+    password: bcrypt.hashSync(pw1, 10),
   },
  "user2RandomID": {
     id: "user2RandomID", 
     email: "user2@example.com", 
-    password: "dishwasher-funk"
+    password: bcrypt.hashSync(pw2, 10),
   }
 }
 
@@ -43,6 +47,7 @@ app.get("/", (req, res) => {
 
 // Show index page /urls/
 app.get("/urls", (req, res) => {
+  // Filter urls for logged in user only
   let filteredDB = {};
   for (let url in urlDatabase) {
     if (urlDatabase[url].userID === req.cookies["user_id"]) {
@@ -54,7 +59,7 @@ app.get("/urls", (req, res) => {
     user: users[req.cookies["user_id"]],
   };
   // console.log(req.cookies["user_id"]);
-  // console.log(users);
+  console.log("All users: ", users);
   // console.log("Rendering urls_index with user", templateVars.user);
   res.render("urls_index", templateVars);
 });
@@ -203,11 +208,9 @@ app.post("/register", (req, res) => {
   users[newID] = {
     id: newID,
     email: req.body.email, 
-    password: req.body.password,
+    password: bcrypt.hashSync(req.body.password, 10),
   };
   res.cookie("user_id", newID);
-  // console.log("body email validity is ", validEmail(req.body.email));
-  // console.log("bad test validity is", validEmail("badtest"));
   console.log("Registration complete");
   console.log("Current user database:", users);
   return res.redirect('/urls');
