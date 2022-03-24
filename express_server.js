@@ -158,7 +158,7 @@ app.post("/urls/:id", (req, res) => {
     return res.status(403).send("403: Cannot edit a URL that does not belong to your accoun. Please <a href='/login'>Login</a> and try again!t\n")
   }
   urlDatabase[req.params.id].longURL = checkScheme(req.body.id); // Prepend https:// if url does not have it.
-  return res.redirect('/urls');
+  return res.redirect(`/urls/${req.params.id}`);
 });
 
 // Delete a short URL
