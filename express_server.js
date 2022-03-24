@@ -58,9 +58,7 @@ app.get("/urls", (req, res) => {
     urls: filteredDB, 
     user: users[req.cookies["user_id"]],
   };
-  // console.log(req.cookies["user_id"]);
   console.log("All users: ", users);
-  // console.log("Rendering urls_index with user", templateVars.user);
   res.render("urls_index", templateVars);
 });
 
