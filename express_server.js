@@ -145,14 +145,10 @@ app.get("/urls/:shortURL", (req, res) => {
   if (!(req.params.shortURL in urlDatabase) || urlDatabase[req.params.shortURL].userID !== req.session.user_id) {
     return res.status(403).send("403: Cannot access a URL that does not belong to your account, or no such URL exists.\n")
   }
-  if (templateVars.shortURL in urlDatabase === false) { //if short URL not in db
-    templateVars.shortURL = "N/A";
-    templateVars.longURL = "Invalid TinyURL entered"
-    templateVars.valid = false;
-  } else { // shortURL exists in URL database
-    templateVars.longURL = urlDatabase[req.params.shortURL].longURL;
-    templateVars.valid = true;
-  }
+  // shortURL exists in URL database
+  templateVars.longURL = urlDatabase[req.params.shortURL].longURL;
+  templateVars.valid = true;
+
   return res.render("urls_show", templateVars);
 });
 
