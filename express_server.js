@@ -6,6 +6,16 @@ fix undefined error when entering /urls/invalidID
 confirm POST /urls returns HTML error if not logged in
 POST /urls/:id - check all conditions
 
+Header buttons to links:
+  Is this about the login/register link on the header, not the 
+  actual submit button login/register page? If so the requirement 
+  did specify those element to be links (so has to be <a> tags), 
+  not button tags. Although personally I do find buttons look 
+  prettier on the header.
+
+  <a class="btn btn-outline-light btn-sm mr-2" 
+  href="/login" role="button">Log in</a>
+
 */
 
 
@@ -19,7 +29,7 @@ const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
 
-// Unencrypted cookie parser
+// Unencrypted cookie parser - deprecated
 const cookieParser = require('cookie-parser')
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}), cookieParser());
@@ -65,7 +75,10 @@ const users = {
 
 // Show text on root path
 app.get("/", (req, res) => {
-  return res.redirect('/urls');
+  if (req.session.user_id in users) {
+    return res.redirect('/urls');
+  }
+  return res.redirect('/login');
 });
 
 // Show index page /urls/
@@ -82,7 +95,7 @@ app.get("/urls", (req, res) => {
     user: users[req.session.user_id],
   };
   console.log("All users: ", users);
-  res.render("urls_index", templateVars);
+  return res.render("urls_index", templateVars);
 });
 
 // Add a short URL to database
@@ -104,7 +117,7 @@ app.post("/urls", (req, res) => {
     longURL: checkScheme(req.body.longURL), // Prepend https:// if url does not have it.
     userID: req.session.user_id, 
   }; 
-  res.redirect(`/urls/${id}`);
+  return res.redirect(`/urls/${id}`);
 });
 
 // Make a new short URL form
@@ -115,17 +128,22 @@ app.get("/urls/new", (req, res) => {
   if (!templateVars.user) { // Redirect to /login if not logged in
     return res.status(403).redirect("/login");
   }
-  res.render("urls_new", templateVars);
+  return res.render("urls_new", templateVars);
 });
 
 // Show information about a single short URL
 app.get("/urls/:shortURL", (req, res) => {
+  // Set up template
   const templateVars = {
     shortURL: req.params.shortURL, 
     user: users[req.session.user_id],
   };
-  if (urlDatabase[req.params.shortURL].userID !== req.session.user_id) {
-    return res.status(403).send("403: Cannot access a URL that does not belong to your account\n")
+  // Check if user is logged in
+  
+  // Check if the shortURL is not in the database, or does not belong to
+  // the logged in user
+  if (!(req.params.shortURL in urlDatabase) || urlDatabase[req.params.shortURL].userID !== req.session.user_id) {
+    return res.status(403).send("403: Cannot access a URL that does not belong to your account, or no such URL exists.\n")
   }
   if (templateVars.shortURL in urlDatabase === false) { //if short URL not in db
     templateVars.shortURL = "N/A";
@@ -135,13 +153,13 @@ app.get("/urls/:shortURL", (req, res) => {
     templateVars.longURL = urlDatabase[req.params.shortURL].longURL;
     templateVars.valid = true;
   }
-  res.render("urls_show", templateVars);
+  return res.render("urls_show", templateVars);
 });
 
 // Update an existing short URL with a new long URL
 app.post("/urls/:id", (req, res) => {
   if (urlDatabase[req.params.id].userID !== req.session.user_id) {
-    return res.status(403).send("403: Cannot edit a URL that does not belong to your account\n")
+    return res.status(403).send("403: Cannot edit a URL that does not belong to your accoun. Please <a href='/login'>Login</a> and try again!t\n")
   }
   urlDatabase[req.params.id].longURL = checkScheme(req.body.id); // Prepend https:// if url does not have it.
   return res.redirect('/urls');
@@ -150,26 +168,34 @@ app.post("/urls/:id", (req, res) => {
 // Delete a short URL
 app.post("/urls/:shortURL/delete", (req, res) => {
   if (urlDatabase[req.params.shortURL].userID !== req.session.user_id) {
-    return res.status(403).send("403: Cannot delete a URL that does not belong to your account\n")
+    return res.status(403).send("403: Cannot delete a URL that does not belong to your account. Please <a href='/login'>Login</a> and try again!\n")
   }
   delete urlDatabase[req.params.shortURL];
-  res.redirect('/urls');
+  return res.redirect('/urls');
 });
 
 // Quick link to go to URL target
 app.get("/u/:shortURL", (req, res) => {
   const longURL = urlDatabase[req.params.shortURL].longURL;
-  res.redirect(longURL);
+  return res.redirect(longURL);
 });
 
 // Login page
 let loginError = ""; // Global scope login error message
 app.get("/login", (req, res) => {
+  console.log(req.session.user_id);
+  // Deletes existing cookie if the userID is not in the users database
+  if (req.session.user_id && !(req.session.user_id in users)) {
+    req.session = null;
+    return res.redirect("/login");
+  }
+  // Set up template variables to pass into html
   const templateVars = {
     user: users[req.session.user_id],
     error: loginError,
   };
-  if (templateVars.user) { // Redirect to /urls if already logged in
+  // Redirect to /urls if already logged in
+  if (templateVars.user) { 
     return res.redirect("/urls");
   }
   return res.render("urls_login", templateVars);
@@ -239,7 +265,7 @@ app.post("/register", (req, res) => {
 
 // Show all URLs in database
 app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
+  return res.json(urlDatabase);
 });
 
 // Start up server

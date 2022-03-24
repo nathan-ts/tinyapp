@@ -13,7 +13,8 @@ const checkScheme = function(url) {
   return url;
 }
 
-// Returns an object with error string (nullable) and data object of user (nullable), given an email and password
+// Returns an object with error string (nullable) and 
+// data object of user (nullable), given an email and password
 const authUser = function(em, pw, userdb) {
   let userID = findEmailID(em, userdb);
   if (!userID) return {error: "Email not found.", data: null };
@@ -34,6 +35,7 @@ const findEmailID = function(email, userdb) {
   return undefined;
 };
 
+// Returns true if an email contains @ and .
 const validEmail = function(email) {
   const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/i;
   // console.log("Regex check:",email.match(emailRegex));
