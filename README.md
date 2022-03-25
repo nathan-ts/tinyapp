@@ -8,8 +8,12 @@ Welcome to my educational project, TinyApp! This was created to learn about full
 
 ## FinalFinalFinalv6
 
-!["Screenshot of landing page"](https://github.com/nathan-ts/tinyapp/blob/master/docs/landing.jpg)
-!["Screenshot of register page"](https://github.com/nathan-ts/tinyapp/blob/master/docs/register.jpg)
+!["Screenshot of landing page"](https://github.com/nathan-ts/tinyapp/blob/main/docs/landing.jpg)
+!["Screenshot of register page"](https://github.com/nathan-ts/tinyapp/blob/main/docs/register.jpg)
+!["Screenshot of login page"](https://github.com/nathan-ts/tinyapp/blob/main/docs/login.jpg)
+!["Screenshot of main page"](https://github.com/nathan-ts/tinyapp/blob/main/docs/main_page.jpg)
+!["Screenshot of url creation page"](https://github.com/nathan-ts/tinyapp/blob/main/docs/new_url.jpg)
+!["Screenshot of short link page"](https://github.com/nathan-ts/tinyapp/blob/main/docs/url_show.jpg)
 
 ## Get started?
 
