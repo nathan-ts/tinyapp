@@ -1,24 +1,4 @@
-/*
-TO DO: 
-
-add edit button on /urls
-fix undefined error when entering /urls/invalidID
-confirm POST /urls returns HTML error if not logged in
-POST /urls/:id - check all conditions
-
-Header buttons to links:
-  Is this about the login/register link on the header, not the 
-  actual submit button login/register page? If so the requirement 
-  did specify those element to be links (so has to be <a> tags), 
-  not button tags. Although personally I do find buttons look 
-  prettier on the header.
-
-  <a class="btn btn-outline-light btn-sm mr-2" 
-  href="/login" role="button">Log in</a>
-
-*/
-
-
+// Server for TinyApp
 const { generateRandomString, checkScheme, authUser, findEmailID, validEmail } = require('./helpFn');
 
 // bcrypt setup for password hashing
@@ -44,9 +24,12 @@ app.use(cookieSession({
   maxAge: 24 * 60 * 60 * 1000 // 24 hours
 }))
 
+// Use EJS as HTML render engine
 app.set("view engine", "ejs")
 
-
+/*
+  DEFAULT VALUES
+*/
 // Default URL database of short and long URLs
 const urlDatabase = {
   "b2xVn2": { 
@@ -126,6 +109,7 @@ app.get("/urls", (req, res) => {
   };
   console.log("All users: ", users);
   console.log("User's urls: ", filteredDB);
+  console.log("request from ", req);
   return res.render("urls_index", templateVars);
 });
 
@@ -181,6 +165,8 @@ app.get("/urls/:shortURL", (req, res) => {
     shortURL: req.params.shortURL, 
     user: users[req.session.user_id],
     longURL: urlDatabase[req.params.shortURL].longURL,
+    created: urlDatabase[req.params.shortURL].created,
+    visits: urlDatabase[req.params.shortURL].visits,
   };
   return res.render("urls_show", templateVars);
 });
@@ -205,6 +191,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 
 // Quick link to go to URL target
 app.get("/u/:shortURL", (req, res) => {
+  urlDatabase[req.params.shortURL].visits++;
   const longURL = urlDatabase[req.params.shortURL].longURL;
   return res.redirect(longURL);
 });

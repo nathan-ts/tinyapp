@@ -17,6 +17,8 @@
       <div class="card-body">
         <h5 class="card-title">TinyURL for: <%= longURL %></h5>
         <p class="card-text">Short URL: <a href="<%= longURL %>"><%= shortURL %></a></p>
+        <p class="card-text">Created: <%= created.toLocaleString() %></p>
+        <p class="card-text">Visits: <%= visits %></p>
       </div>
       <div class="mx-auto row justify-content-center">
         <form class="form-gro up" action="/urls/<%= shortURL %>" method="POST">

@@ -20,8 +20,11 @@
         <tr>
           <th scope="col">Short URL</th>
           <th scope="col">Long URL</th>
+          <th scope="col">Created</th>
+          <th scope="col">Visitors</th>
           <th scope="col">Edit</th>
           <th scope="col">Delete</th>
+          <th scope="col">Locale</th>
         </tr>
       </thead>
       <tbody>
@@ -29,12 +32,15 @@
           <tr>
             <td><a href="/urls/<%= url %>"><%= url %></a></td>
             <td><a href="<%= urls[url].longURL %>"><%= urls[url].longURL %></a></td>
+            <td><%= urls[url].created.toLocaleString() %></td>
+            <td><%= urls[url].visits %></td>
             <td><form method="GET" action="/urls/<%= url %>">
               <button type="edit" class="btn btn-info">Edit</button>
             </form></td>
             <td><form method="POST" action="/urls/<%= url %>/delete">
               <button type="delete" class="btn btn-danger">Delete</button>
             </form></td>
+            <td><%= Intl.DateTimeFormat().resolvedOptions().timeZone %></td>
           </tr>
         <% } %>
       </tbody>
