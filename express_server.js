@@ -1,15 +1,15 @@
 // Server for TinyApp
 const { generateRandomString, checkScheme, authUser, findEmailID, validEmail } = require('./helpFn');
 
-// bcrypt setup for password hashing
-const bcrypt = require('bcryptjs');
-
 // Express setup
 const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
 
-// Unencrypted cookie parser - deprecated
+// bcrypt setup for password hashing
+const bcrypt = require('bcryptjs');
+
+// Unencrypted parsers
 const cookieParser = require('cookie-parser')
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}), cookieParser());
@@ -23,6 +23,10 @@ app.use(cookieSession({
   // Cookie Options
   maxAge: 24 * 60 * 60 * 1000 // 24 hours
 }))
+
+// Method override to use queries instead of PUT/DELETE
+const methodOverride = require('method-override')
+app.use(methodOverride('_method'))
 
 // Use EJS as HTML render engine
 app.set("view engine", "ejs")
@@ -172,7 +176,7 @@ app.get("/urls/:shortURL", (req, res) => {
 });
 
 // Update an existing short URL with a new long URL
-app.post("/urls/:id", (req, res) => {
+app.put("/urls/:id", (req, res) => {
   if (urlDatabase[req.params.id].userID !== req.session.user_id) {
     return res.status(403).send("403: Cannot edit a URL that does not belong to your accoun. Please <a href='/login'>Login</a> and try again!t\n")
   }
@@ -181,7 +185,7 @@ app.post("/urls/:id", (req, res) => {
 });
 
 // Delete a short URL
-app.post("/urls/:shortURL/delete", (req, res) => {
+app.delete("/urls/:shortURL", (req, res) => {
   if (urlDatabase[req.params.shortURL].userID !== req.session.user_id) {
     return res.status(403).send("403: Cannot delete a URL that does not belong to your account. Please <a href='/login'>Login</a> and try again!\n")
   }

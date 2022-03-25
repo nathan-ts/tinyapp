@@ -24,7 +24,6 @@
           <th scope="col">Visitors</th>
           <th scope="col">Edit</th>
           <th scope="col">Delete</th>
-          <th scope="col">Locale</th>
         </tr>
       </thead>
       <tbody>
@@ -37,10 +36,9 @@
             <td><form method="GET" action="/urls/<%= url %>">
               <button type="edit" class="btn btn-info">Edit</button>
             </form></td>
-            <td><form method="POST" action="/urls/<%= url %>/delete">
+            <td><form method="POST" action="/urls/<%= url %>?_method=DELETE">
               <button type="delete" class="btn btn-danger">Delete</button>
             </form></td>
-            <td><%= Intl.DateTimeFormat().resolvedOptions().timeZone %></td>
           </tr>
         <% } %>
       </tbody>
