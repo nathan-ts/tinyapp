@@ -42,5 +42,4 @@ const validEmail = function(email) {
   return Boolean(email.match(emailRegex));
 }
 
-
 module.exports = { generateRandomString, checkScheme, authUser, findEmailID, validEmail };

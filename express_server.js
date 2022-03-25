@@ -49,12 +49,42 @@ app.set("view engine", "ejs")
 
 // Default URL database of short and long URLs
 const urlDatabase = {
-  "b2xVn2": { longURL: "http://www.lighthouselabs.ca", userID: "userRandomID" },
-  "9sm5xK": { longURL: "http://www.google.com", userID: "user2RandomID" },
-  "SuplrX": { longURL: "https://www.playlostark.com", userID: "userRandomID" },
-  "q64A7G": { longURL: "https://na.finalfantasy.com", userID: "user2RandomID" },
-  "loHenP": { longURL: "http://iro.ragnarokonline.com", userID: "userRandomID" },
-  "OAQJtK": { longURL: "https://www.kingdomhearts.com", userID: "user2RandomID" },
+  "b2xVn2": { 
+    longURL: "http://www.lighthouselabs.ca", 
+    userID: "userRandomID", 
+    created: new Date(),
+    visits: 0,
+    visitors: [], },
+  "9sm5xK": { 
+    longURL: "http://www.google.com", 
+    userID: "user2RandomID", 
+    created: new Date(),
+    visits: 0,
+    visitors: [], },
+  "SuplrX": { 
+    longURL: "https://www.playlostark.com", 
+    userID: "userRandomID", 
+    created: new Date(),
+    visits: 0,
+    visitors: [], },
+  "q64A7G": { 
+    longURL: "https://na.finalfantasy.com", 
+    userID: "user2RandomID", 
+    created: new Date(),
+    visits: 0,
+    visitors: [], },
+  "loHenP": { 
+    longURL: "http://iro.ragnarokonline.com", 
+    userID: "userRandomID", 
+    created: new Date(),
+    visits: 0,
+    visitors: [], },
+  "OAQJtK": { 
+    longURL: "https://www.kingdomhearts.com", 
+    userID: "user2RandomID",
+    created: new Date(),
+    visits: 0,
+    visitors: [], },
 };
 
 // Default user database
@@ -73,7 +103,7 @@ const users = {
   }
 }
 
-// Show text on root path
+// Redirect to /urls or /login depending on login state
 app.get("/", (req, res) => {
   if (req.session.user_id in users) {
     return res.redirect('/urls');
@@ -95,6 +125,7 @@ app.get("/urls", (req, res) => {
     user: users[req.session.user_id],
   };
   console.log("All users: ", users);
+  console.log("User's urls: ", filteredDB);
   return res.render("urls_index", templateVars);
 });
 
@@ -104,8 +135,8 @@ app.post("/urls", (req, res) => {
   const templateVars = { 
     user: users[req.session.user_id],
   };
-  if (!templateVars.user) { // Redirect to /login if not logged in
-    return res.status(403).redirect("/login");
+  if (!templateVars.user) { // Error message if not logged in
+    return res.status(403).send("403: You are not logged in. Please <a href='/login'>Login</a> and try again!")
   }
   // Get unique random identifier
   let id = generateRandomString(); 
@@ -116,6 +147,9 @@ app.post("/urls", (req, res) => {
   urlDatabase[id] = { 
     longURL: checkScheme(req.body.longURL), // Prepend https:// if url does not have it.
     userID: req.session.user_id, 
+    created: new Date(),
+    visits: 0,
+    visitors: [],
   }; 
   return res.redirect(`/urls/${id}`);
 });
@@ -133,22 +167,21 @@ app.get("/urls/new", (req, res) => {
 
 // Show information about a single short URL
 app.get("/urls/:shortURL", (req, res) => {
-  // Set up template
-  const templateVars = {
-    shortURL: req.params.shortURL, 
-    user: users[req.session.user_id],
-  };
   // Check if user is logged in
-  
+  if (!users[req.session.user_id]) {
+    return res.status(403).send("403: You are not logged in. Please <a href='/login'>Login</a> and try again!")
+  }
   // Check if the shortURL is not in the database, or does not belong to
   // the logged in user
   if (!(req.params.shortURL in urlDatabase) || urlDatabase[req.params.shortURL].userID !== req.session.user_id) {
     return res.status(403).send("403: Cannot access a URL that does not belong to your account, or no such URL exists.\n")
   }
-  // shortURL exists in URL database
-  templateVars.longURL = urlDatabase[req.params.shortURL].longURL;
-  templateVars.valid = true;
-
+  // Set up template (only reaches here if no other errors)
+  const templateVars = {
+    shortURL: req.params.shortURL, 
+    user: users[req.session.user_id],
+    longURL: urlDatabase[req.params.shortURL].longURL,
+  };
   return res.render("urls_show", templateVars);
 });
 
