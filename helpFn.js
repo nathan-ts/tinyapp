@@ -1,8 +1,8 @@
 const bcrypt = require('bcryptjs');
 
 // Returns a random 6 character string with upper, lower and numeric
-const generateRandomString = function() {
-  return Buffer.from(Math.random().toString()).toString("base64").substr(10, 6);
+const generateRandomString = function(length) {
+  return Buffer.from(Math.random().toString()).toString("base64").substr(10, length);
 }
 
 // Returns a URL string with https:// prepended if there is no scheme on the URL provided

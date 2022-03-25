@@ -41,37 +41,37 @@ const urlDatabase = {
     userID: "userRandomID", 
     created: new Date(),
     visits: 0,
-    visitors: [], },
+    visitors: {}, },
   "9sm5xK": { 
     longURL: "http://www.google.com", 
     userID: "user2RandomID", 
     created: new Date(),
     visits: 0,
-    visitors: [], },
+    visitors: {}, },
   "SuplrX": { 
     longURL: "https://www.playlostark.com", 
     userID: "userRandomID", 
     created: new Date(),
     visits: 0,
-    visitors: [], },
+    visitors: {}, },
   "q64A7G": { 
     longURL: "https://na.finalfantasy.com", 
     userID: "user2RandomID", 
     created: new Date(),
     visits: 0,
-    visitors: [], },
+    visitors: {}, },
   "loHenP": { 
     longURL: "http://iro.ragnarokonline.com", 
     userID: "userRandomID", 
     created: new Date(),
     visits: 0,
-    visitors: [], },
+    visitors: {}, },
   "OAQJtK": { 
     longURL: "https://www.kingdomhearts.com", 
     userID: "user2RandomID",
     created: new Date(),
     visits: 0,
-    visitors: [], },
+    visitors: {}, },
 };
 
 // Default user database
@@ -112,7 +112,7 @@ app.get("/urls", (req, res) => {
     user: users[req.session.user_id],
   };
   console.log("All users: ", users);
-  console.log("User's urls: ", filteredDB);
+  console.dir(filteredDB, { depth: null });
   // console.log("request from ", req);
   return res.render("urls_index", templateVars);
 });
@@ -127,9 +127,9 @@ app.post("/urls", (req, res) => {
     return res.status(403).send("403: You are not logged in. Please <a href='/login'>Login</a> and try again!")
   }
   // Get unique random identifier
-  let id = generateRandomString(); 
+  let id = generateRandomString(6); 
   while (id in urlDatabase) {
-    id = generateRandomString();
+    id = generateRandomString(6);
   }
   // Add new short URL to database and redirect to urls_show
   urlDatabase[id] = { 
@@ -137,7 +137,7 @@ app.post("/urls", (req, res) => {
     userID: req.session.user_id, 
     created: new Date(),
     visits: 0,
-    visitors: [],
+    visitors: {},
   }; 
   return res.redirect(`/urls/${id}`);
 });
@@ -168,9 +168,7 @@ app.get("/urls/:shortURL", (req, res) => {
   const templateVars = {
     shortURL: req.params.shortURL, 
     user: users[req.session.user_id],
-    longURL: urlDatabase[req.params.shortURL].longURL,
-    created: urlDatabase[req.params.shortURL].created,
-    visits: urlDatabase[req.params.shortURL].visits,
+    url: urlDatabase[req.params.shortURL],
   };
   return res.render("urls_show", templateVars);
 });
@@ -195,7 +193,20 @@ app.delete("/urls/:shortURL", (req, res) => {
 
 // Quick link to go to URL target
 app.get("/u/:shortURL", (req, res) => {
+  // Track total visits
   urlDatabase[req.params.shortURL].visits++;
+  // Set unique visitor cookie if none already
+  if (!req.session.visitor) { 
+    req.session.visitor = generateRandomString(10);
+  } 
+  // Track unique visitors
+  if (!urlDatabase[req.params.shortURL].visitors[req.session.visitor]) {
+    urlDatabase[req.params.shortURL].visitors[req.session.visitor] = {
+      timestamps: [],
+    };
+  }
+  // Add timestamp of visit under visitor ID key
+  urlDatabase[req.params.shortURL].visitors[req.session.visitor].timestamps.push(new Date());
   const longURL = urlDatabase[req.params.shortURL].longURL;
   return res.redirect(longURL);
 });
@@ -271,7 +282,7 @@ app.post("/register", (req, res) => {
   }
   registerError = ""; 
 
-  const newID = generateRandomString();
+  const newID = generateRandomString(6);
   users[newID] = {
     id: newID,
     email: req.body.email, 
