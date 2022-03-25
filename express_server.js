@@ -109,7 +109,7 @@ app.get("/urls", (req, res) => {
   };
   console.log("All users: ", users);
   console.log("User's urls: ", filteredDB);
-  console.log("request from ", req);
+  // console.log("request from ", req);
   return res.render("urls_index", templateVars);
 });
 
