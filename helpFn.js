@@ -7,7 +7,10 @@ const generateRandomString = function(length) {
 
 // Returns a URL string with https:// prepended if there is no scheme on the URL provided
 const checkScheme = function(url) {
-  if (url.slice(0,4) !== "http") {
+  // if (url.slice(0,4) !== "http") {
+  //   url = `https://${url}`;
+  // }
+  if (!url.startsWith("http")) {
     url = `https://${url}`;
   }
   return url;
