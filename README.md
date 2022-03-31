@@ -6,7 +6,7 @@
 
 Welcome to my educational project, TinyApp! This was created to learn about full stack apps, Node.js web servers, and EJS for templating. 
 
-## FinalFinalFinalv6
+## What it looks like
 
 !["Screenshot of landing page"](https://github.com/nathan-ts/tinyapp/blob/main/docs/landing.jpg)
 !["Screenshot of register page"](https://github.com/nathan-ts/tinyapp/blob/main/docs/register.jpg)
